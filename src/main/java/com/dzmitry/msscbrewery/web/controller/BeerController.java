@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.UUID;
 
-//@Deprecated
+@Deprecated
 @RestController
 @RequestMapping("/api/v1/beer")
 public class BeerController {
