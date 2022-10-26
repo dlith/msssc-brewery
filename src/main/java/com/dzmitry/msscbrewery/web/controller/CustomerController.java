@@ -9,6 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,7 +28,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerDTO> handlePost(@RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<CustomerDTO> handlePost(@Valid @RequestBody CustomerDTO customerDTO) {
         CustomerDTO savedDto = customerService.saveNewCustomer(customerDTO);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", "/api/v1/customer/" + savedDto.getId().toString());
@@ -32,7 +36,7 @@ public class CustomerController {
     }
 
     @PutMapping("/{customerId}")
-    public ResponseEntity<CustomerDTO> handleUpdate(@PathVariable("customerId") UUID customerId, @RequestBody CustomerDTO customerDTO) {
+    public ResponseEntity<CustomerDTO> handleUpdate(@PathVariable("customerId") UUID customerId,@Valid @RequestBody CustomerDTO customerDTO) {
         customerService.updateCustomer(customerId, customerDTO);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -41,5 +45,16 @@ public class CustomerController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@PathVariable("customerId") UUID customerId) {
         customerService.deleteById(customerId);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<List<String>> validationErrorHandler(ConstraintViolationException exception) {
+        List<String> errors = new ArrayList<>(exception.getConstraintViolations().size());
+
+        exception.getConstraintViolations().forEach(constraintViolation -> {
+            errors.add(constraintViolation.getPropertyPath() + ": " + constraintViolation.getMessage());
+        });
+
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 }
